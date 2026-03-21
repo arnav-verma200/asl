@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASL Sign Language Translator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-brand">
+            🤟 ASL Sign Language Translator
+        </div>
+        <div class="nav-links">
+            <span class="accuracy-badge">Model Accuracy: 99.15%</span>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <div class="left-panel">
+
+            <div class="camera-header">
+                <h2>📷 Live Camera Feed</h2>
+                <div class="camera-toggle">
+                    <button id="btn-laptop"
+                            class="toggle-btn active"
+                            onclick="switchCamera('laptop')">
+                        💻 Laptop
+                    </button>
+                    <button id="btn-phone"
+                            class="toggle-btn"
+                            onclick="switchCamera('phone')">
+                        📱 Phone
+                    </button>
+                </div>
+            </div>
+
+            <div class="video-wrapper">
+                <img id="video-feed"
+                     src="/video_feed"
+                     alt="Camera Feed">
+                <div id="hand-status" class="hand-status no-hand">
+                    No Hand Detected
+                </div>
+            </div>
+
+            <div class="instructions">
+                <h3>📖 How To Use:</h3>
+                <ol>
+                    <li>Show a hand gesture to the camera</li>
+                    <li>Hold the gesture for 2 seconds</li>
+                    <li>Letter will be added to the word</li>
+                    <li>Click <b>Add Word</b> to add to sentence</li>
+                    <li>Click <b>Speak</b> to hear the sentence</li>
+                </ol>
+            </div>
+
+        </div>
+
+        <div class="right-panel">
+
+            <div class="prediction-card">
+                <div class="prediction-label">Current Letter</div>
+                <div id="predicted-letter" class="predicted-letter">—</div>
+                <div class="confidence-bar-wrapper">
+                    <div id="confidence-bar" class="confidence-bar"></div>
+                </div>
+                <div id="confidence-text" class="confidence-text">Confidence: 0%</div>
+            </div>
+
+            <div class="word-card">
+                <div class="card-label">Current Word</div>
+                <div id="current-word" class="current-word">_</div>
+                <button class="btn btn-delete"
+                        onclick="deleteLetter()">
+                    ⌫ Delete Letter
+                </button>
+            </div>
+
+            <div class="sentence-card">
+                <div class="card-label">Sentence</div>
+                <div id="sentence" class="sentence">Your sentence will appear here...</div>
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-primary"
+                        onclick="addWord()">
+                    ➕ Add Word
+                </button>
+                <button class="btn btn-success"
+                        onclick="speakSentence()">
+                    🔊 Speak
+                </button>
+                <button class="btn btn-danger"
+                        onclick="clearAll()">
+                    🗑️ Clear All
+                </button>
+            </div>
+
+            <div class="stats-card">
+                <h3>📊 Model Stats</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value">99.15%</div>
+                        <div class="stat-label">Test Accuracy</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">SVM</div>
+                        <div class="stat-label">Best Model</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">25</div>
+                        <div class="stat-label">Letters</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">42</div>
+                        <div class="stat-label">Features</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+</body>
+</html>
