@@ -22,7 +22,7 @@ engine = pyttsx3.init()
 engine.setProperty('rate', 150)
 
 # Phone camera URL
-SNAPSHOT_URL = "http://192.168.1.3:8080/shot.jpg"
+SNAPSHOT_URL = "http://192.168.1.4:8080/shot.jpg"
 
 print("Model and MediaPipe loaded!")
 
