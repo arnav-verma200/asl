@@ -6,6 +6,7 @@ from collections import deque
 import time
 import pyttsx3
 import threading
+import urllib.request
 
 model      = joblib.load('models/best_model.pkl')
 mp_hands   = mp.solutions.hands
@@ -20,7 +21,21 @@ hands      = mp_hands.Hands(
 engine = pyttsx3.init()
 engine.setProperty('rate', 150)
 
+# Phone camera URL
+SNAPSHOT_URL = "http://192.168.1.3:8080/shot.jpg"
+
 print("Model and MediaPipe loaded!")
+
+
+def get_frame(url):
+    try:
+        img_resp = urllib.request.urlopen(url, timeout=2)
+        imgnp    = np.array(bytearray(img_resp.read()), dtype=np.uint8)
+        frame    = cv2.imdecode(imgnp, -1)
+        return frame
+    except Exception as e:
+        print(f"Frame error: {e}")
+        return None
 
 
 def speak(text):
@@ -63,9 +78,13 @@ def draw_ui(frame, predicted_letter, confidence,
 
     h, w = frame.shape[:2]
 
+    font_scale_big    = w / 640
+    font_scale_medium = w / 900
+    font_scale_small  = w / 1200
+
     overlay = frame.copy()
-    cv2.rectangle(overlay, (0, 0),     (w, 120),  (0, 0, 0), -1)
-    cv2.rectangle(overlay, (0, h-100), (w, h),    (0, 0, 0), -1)
+    cv2.rectangle(overlay, (0, 0),           (w, int(h*0.18)), (0, 0, 0), -1)
+    cv2.rectangle(overlay, (0, int(h*0.88)), (w, h),           (0, 0, 0), -1)
     cv2.addWeighted(overlay, 0.6, frame, 0.4, 0, frame)
 
     if hand_detected:
@@ -75,23 +94,36 @@ def draw_ui(frame, predicted_letter, confidence,
         color  = (0, 0, 255)
         status = "No Hand Detected"
 
-    cv2.putText(frame, status, (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
+    cv2.putText(frame, status,
+                (10, int(h*0.05)),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                font_scale_medium, color, 2)
 
     if predicted_letter:
-        cv2.putText(frame, f"Letter: {predicted_letter}", (10, 70),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 255, 255), 3)
-        cv2.putText(frame, f"Confidence: {confidence}%", (10, 105),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+        cv2.putText(frame, f"Letter: {predicted_letter}",
+                    (10, int(h*0.12)),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    font_scale_big, (0, 255, 255), 3)
 
-    cv2.putText(frame, f"Word: {current_word}", (10, h-65),
-                cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 0), 2)
-    cv2.putText(frame, f"Sentence: {sentence}", (10, h-25),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+        cv2.putText(frame, f"Confidence: {confidence}%",
+                    (10, int(h*0.17)),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    font_scale_small, (255, 255, 255), 2)
+
+    cv2.putText(frame, f"Word: {current_word}",
+                (10, int(h*0.92)),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                font_scale_medium, (255, 255, 0), 2)
+
+    cv2.putText(frame, f"Sentence: {sentence}",
+                (10, int(h*0.97)),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                font_scale_small, (255, 255, 255), 2)
 
     cv2.putText(frame, "SPACE=add word  ENTER=speak  C=clear  Q=quit",
-                (w-450, 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.55, (200, 200, 200), 1)
+                (int(w*0.45), int(h*0.03)),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                font_scale_small, (200, 200, 200), 1)
 
     return frame
 
@@ -107,9 +139,20 @@ def main():
     LETTER_DELAY      = 2.0
     CONFIDENCE_FRAMES = 7
 
-    cap = cv2.VideoCapture(0)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH,  1280)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    print(f"Connecting to: {SNAPSHOT_URL}")
+    print("Testing connection...")
+
+    test_frame = get_frame(SNAPSHOT_URL)
+    if test_frame is None:
+        print("Could not connect to phone camera!")
+        print("Make sure:")
+        print("  1. Phone and PC are on same WiFi")
+        print("  2. IP Camera app is running on phone")
+        print("  3. IP address is correct")
+        return
+
+    h, w = test_frame.shape[:2]
+    print(f"Connected! Phone resolution: {w}x{h}")
 
     print("="*50)
     print("REAL TIME SIGN LANGUAGE TRANSLATOR")
@@ -122,11 +165,27 @@ def main():
 
     predicted_letter = ""
     confidence       = 0
+    fail_count       = 0
 
     while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
+
+        frame = get_frame(SNAPSHOT_URL)
+
+        if frame is None:
+            fail_count += 1
+            print(f"Failed to get frame ({fail_count})")
+            if fail_count > 10:
+                print("Too many failures! Check connection.")
+                break
+            continue
+
+        fail_count = 0
+
+        # Resize keeping aspect ratio
+        display_width  = 1280
+        h, w           = frame.shape[:2]
+        display_height = int(h * display_width / w)
+        frame          = cv2.resize(frame, (display_width, display_height))
 
         frame     = cv2.flip(frame, 1)
         image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -193,7 +252,6 @@ def main():
             sentence     = ""
             print("Cleared!")
 
-    cap.release()
     cv2.destroyAllWindows()
     print("Goodbye!")
 
