@@ -9,7 +9,6 @@ import time
 import threading
 import urllib.request
 import pyttsx3
-from collections import defaultdict
 
 app = Flask(__name__)
 CORS(app)
@@ -23,9 +22,6 @@ hands      = mp_hands.Hands(
     min_detection_confidence=0.7,
     min_tracking_confidence=0.7
 )
-
-engine = pyttsx3.init()
-engine.setProperty('rate', 150)
 
 state = {
     'predicted_letter': '',
@@ -41,12 +37,15 @@ last_letter_time  = time.time()
 LETTER_DELAY      = 2.0
 CONFIDENCE_FRAMES = 7
 PHONE_URL         = "http://192.168.1.3:8080/shot.jpg"
+cap               = None
+cap_lock          = threading.Lock()
+speak_lock        = threading.Lock()
+
 
 # Load dictionary
 def load_dictionary(path='data/words.txt'):
     with open(path, 'r') as f:
         words = [w.strip().upper() for w in f.readlines()]
-    # Only keep words between 2 and 10 characters
     words = [w for w in words if 2 <= len(w) <= 10]
     return sorted(words)
 
@@ -57,18 +56,22 @@ print(f"Dictionary loaded: {len(DICTIONARY)} words")
 def get_suggestions(prefix, n=4):
     if not prefix:
         return []
-    prefix = prefix.upper()
+    prefix  = prefix.upper()
     matches = [w for w in DICTIONARY if w.startswith(prefix)]
     return matches[:n]
-
-cap               = None
-cap_lock          = threading.Lock()
 
 
 def speak(text):
     def run():
-        engine.say(text)
-        engine.runAndWait()
+        with speak_lock:
+            try:
+                tts = pyttsx3.init()
+                tts.setProperty('rate', 150)
+                tts.say(text)
+                tts.runAndWait()
+                tts.stop()
+            except Exception as e:
+                print(f"Speech error: {e}")
     t        = threading.Thread(target=run)
     t.daemon = True
     t.start()
@@ -133,7 +136,7 @@ def process_frame(frame):
 
         if len(prediction_buffer) == 10:
             most_common = max(set(prediction_buffer),
-                            key=list(prediction_buffer).count)
+                              key=list(prediction_buffer).count)
             count       = list(prediction_buffer).count(most_common)
             state['confidence'] = round((count / 10) * 100)
 
@@ -182,15 +185,18 @@ def get_state():
 @app.route('/add_word', methods=['POST'])
 def add_word():
     if state['current_word']:
-        state['sentence']    += state['current_word'] + ' '
-        speak(state['current_word'])
+        word                  = state['current_word']
+        state['sentence']    += word + ' '
         state['current_word'] = ''
+        prediction_buffer.clear()
+        speak(word)
     return jsonify({'success': True})
 
 @app.route('/speak', methods=['POST'])
 def speak_sentence():
-    if state['sentence']:
-        speak(state['sentence'])
+    sentence = state['sentence'].strip()
+    if sentence:
+        speak(sentence)
     return jsonify({'success': True})
 
 @app.route('/clear', methods=['POST'])
@@ -224,19 +230,18 @@ def switch_camera():
 
 @app.route('/suggestions')
 def suggestions():
-    prefix = request.args.get('prefix', '')
+    prefix  = request.args.get('prefix', '')
     results = get_suggestions(prefix)
     return jsonify({'suggestions': results})
-
 
 @app.route('/use_suggestion', methods=['POST'])
 def use_suggestion():
     word = request.get_json().get('word', '')
     if word:
         state['sentence']    += word + ' '
-        speak(word)
         state['current_word'] = ''
         prediction_buffer.clear()
+        speak(word)
     return jsonify({'success': True})
 
 
