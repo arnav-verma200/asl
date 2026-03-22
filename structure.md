@@ -141,4 +141,4 @@ sign-language-translator/
 
 This is your **complete bible** for the project. Every file, every week, every library.
 
-Now shall we continue with **data_preprocessing.py?** 🚀
+Now shall we continue with **data_preprocessing.py?** 🚀 
