@@ -1,0 +1,13 @@
+opencv-python==4.8.0.76
+mediapipe==0.10.9
+numpy
+pandas
+scikit-learn
+joblib
+matplotlib
+seaborn
+flask
+flask-cors
+pyttsx3
+jupyter
+ipykernel
