@@ -15,51 +15,51 @@ sign-language-translator/
 │   │   └── (empty for now)
 │   │
 │   └── landmarks/
-│       ├── landmarks.csv               ✅ Done
-│       └── landmarks_clean.csv         🔄 After preprocessing
+│       ├── landmarks.csv               
+│       └── landmarks_clean.csv         
 │
 ├── notebooks/
-│   ├── 01_data_exploration.ipynb       ⏳ Week 1
-│   ├── 02_feature_extraction.ipynb     ⏳ Week 1
-│   ├── 03_model_training.ipynb         ⏳ Week 2
-│   └── 04_evaluation.ipynb             ⏳ Week 2
+│   ├── 01_data_exploration.ipynb       
+│   ├── 02_feature_extraction.ipynb     
+│   ├── 03_model_training.ipynb         
+│   └── 04_evaluation.ipynb             
 │
 ├── src/
-│   ├── data_collection.py              ⏳ For your own webcam data
-│   ├── feature_extraction.py           ✅ Done
-│   ├── data_preprocessing.py           🔄 Doing right now
-│   ├── train.py                        ⏳ Week 2
-│   ├── evaluate.py                     ⏳ Week 2
-│   ├── predict.py                      ⏳ Week 3
-│   └── real_time.py                    ⏳ Week 3
+│   ├── data_collection.py              
+│   ├── feature_extraction.py           
+│   ├── data_preprocessing.py           
+│   ├── train.py                       
+│   ├── evaluate.py                     
+│   ├── predict.py                      
+│   └── real_time.py                    
 │
 ├── models/
-│   ├── random_forest_model.pkl         ⏳ After training
-│   ├── svm_model.pkl                   ⏳ After training
-│   ├── knn_model.pkl                   ⏳ After training
-│   ├── mlp_model.pkl                   ⏳ After training
-│   └── best_model.pkl                  ⏳ After evaluation
+│   ├── random_forest_model.pkl         
+│   ├── svm_model.pkl                   
+│   ├── knn_model.pkl                   
+│   ├── mlp_model.pkl                   
+│   └── best_model.pkl                  
 │
 ├── app/
-│   ├── app.py                          ⏳ Week 4
+│   ├── app.py                          
 │   ├── templates/
-│   │   └── index.html                  ⏳ Week 4
+│   │   └── index.html                  
 │   └── static/
 │       ├── css/
-│       │   └── style.css               ⏳ Week 4
+│       │   └── style.css               
 │       ├── js/
-│       │   └── main.js                 ⏳ Week 4
-│       └── icons/                      ⏳ Week 4
+│       │   └── main.js                 
+│       └── icons/                      
 │
 ├── tests/
-│   ├── test_feature_extraction.py      ⏳ Week 3
-│   └── test_model_accuracy.py          ⏳ Week 3
+│   ├── test_feature_extraction.py      
+│   └── test_model_accuracy.py          
 │
 ├── demo/
-│   └── demo_video.mp4                  ⏳ Final week
+│   └── demo_video.mp4                  
 │
-├── requirements.txt                    ⏳ Final week
-└── README.md                           ⏳ Final week
+├── requirements.txt                    
+└── README.md                           
 ```
 
 ---
@@ -68,38 +68,38 @@ sign-language-translator/
 
 ```
 WEEK 1 — Data
-✅ feature_extraction.py     →  Done
-🔄 data_preprocessing.py     →  Doing now
-⏳ data_collection.py        →  Collect your own webcam data
-⏳ 01_data_exploration.ipynb →  Visualize class distribution
-⏳ 02_feature_extraction.ipynb → Document the process
+feature_extraction.py     →  Done
+data_preprocessing.py     →  Doing now
+data_collection.py        →  Collect your own webcam data
+01_data_exploration.ipynb →  Visualize class distribution
+02_feature_extraction.ipynb → Document the process
 
 WEEK 2 — Training
-⏳ train.py                  →  Train 4 models and compare
-⏳ evaluate.py               →  Confusion matrix, accuracy
-⏳ 03_model_training.ipynb   →  Document training process
-⏳ 04_evaluation.ipynb       →  Document results
-⏳ models/ folder            →  Save all trained models
+train.py                  →  Train 4 models and compare
+evaluate.py               →  Confusion matrix, accuracy
+03_model_training.ipynb   →  Document training process
+04_evaluation.ipynb       →  Document results
+models/ folder            →  Save all trained models
 
 WEEK 3 — Prediction & Real Time
-⏳ predict.py                →  Single image prediction
-⏳ real_time.py              →  Live webcam inference
-⏳ tests/                    →  Test everything works
+predict.py                →  Single image prediction
+real_time.py              →  Live webcam inference
+tests/                    →  Test everything works
 
 WEEK 4 — Web App & Polish
-⏳ app.py                    →  Flask backend
-⏳ index.html                →  Frontend UI
-⏳ style.css + main.js       →  Styling and interactions
+app.py                    →  Flask backend
+index.html                →  Frontend UI
+style.css + main.js       →  Styling and interactions
 
 FINAL WEEK — Wrap Up
-⏳ demo_video.mp4            →  Record live demo
-⏳ requirements.txt          →  List all libraries
-⏳ README.md                 →  Full project documentation
+demo_video.mp4            →  Record live demo
+requirements.txt          →  List all libraries
+README.md                 →  Full project documentation
 ```
 
 ---
 
-## 📦 Libraries We Will Use Across The Project:
+## Libraries We Will Use Across The Project:
 
 ```
 DATA & ML
@@ -127,14 +127,14 @@ SAVING MODELS
 
 ---
 
-## ✅ Current Status:
+##  Current Status:
 
 ```
 sign-language-translator/
 │
-├── data/landmarks/landmarks.csv    ✅ EXISTS
-├── src/feature_extraction.py       ✅ EXISTS
-└── src/data_preprocessing.py       🔄 CREATE THIS NOW
+├── data/landmarks/landmarks.csv    
+├── src/feature_extraction.py       
+└── src/data_preprocessing.py       
 ```
 
 ---
