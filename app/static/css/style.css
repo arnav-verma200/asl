@@ -109,3 +109,27 @@ button {
 
 button:hover  { border-color: #00ff88; color: #00ff88; }
 button.active { border-color: #00ff88; color: #00ff88; }
+
+#suggestions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    min-height: 34px;
+}
+
+#suggestions button {
+    padding: 5px 12px;
+    background: #0d0d0d;
+    border: 1px solid #00ff8840;
+    color: #00ff88;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 0.8rem;
+    transition: all 0.15s;
+}
+
+#suggestions button:hover {
+    background: #00ff8815;
+    border-color: #00ff88;
+}

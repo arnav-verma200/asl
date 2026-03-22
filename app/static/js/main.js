@@ -4,7 +4,7 @@ setInterval(() => {
         .then(d => {
             document.getElementById('letter-display').textContent = d.predicted_letter || '—';
             document.getElementById('conf').textContent     = 'Confidence: ' + d.confidence + '%';
-            document.getElementById('word').textContent     = d.current_word || '_';
+            document.getElementById('word').textContent     = d.current_word || '_'; fetchSuggestions(d.current_word);
             document.getElementById('sentence').textContent = d.sentence     || '...';
 
             const s     = document.getElementById('hand-status');
@@ -34,3 +34,35 @@ document.addEventListener('keydown', e => {
     if (e.code === 'KeyC')      clearAll();
     if (e.code === 'Backspace') deleteLetter();
 });
+
+function fetchSuggestions(prefix) {
+    if (!prefix) {
+        document.getElementById('suggestions').innerHTML = '';
+        return;
+    }
+
+    fetch('/suggestions?prefix=' + prefix)
+        .then(r => r.json())
+        .then(d => {
+            const box = document.getElementById('suggestions');
+            box.innerHTML = '';
+
+            d.suggestions.forEach(word => {
+                const btn       = document.createElement('button');
+                btn.textContent = word;
+                btn.onclick     = () => useSuggestion(word);
+                box.appendChild(btn);
+            });
+        });
+}
+
+function useSuggestion(word) {
+    fetch('/use_suggestion', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ word })
+    }).then(() => {
+        document.getElementById('word').textContent        = '_';
+        document.getElementById('suggestions').innerHTML   = '';
+    });
+}

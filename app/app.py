@@ -9,6 +9,7 @@ import time
 import threading
 import urllib.request
 import pyttsx3
+from collections import defaultdict
 
 app = Flask(__name__)
 CORS(app)
@@ -40,6 +41,26 @@ last_letter_time  = time.time()
 LETTER_DELAY      = 2.0
 CONFIDENCE_FRAMES = 7
 PHONE_URL         = "http://192.168.1.3:8080/shot.jpg"
+
+# Load dictionary
+def load_dictionary(path='data/words.txt'):
+    with open(path, 'r') as f:
+        words = [w.strip().upper() for w in f.readlines()]
+    # Only keep words between 2 and 10 characters
+    words = [w for w in words if 2 <= len(w) <= 10]
+    return sorted(words)
+
+DICTIONARY = load_dictionary()
+print(f"Dictionary loaded: {len(DICTIONARY)} words")
+
+
+def get_suggestions(prefix, n=4):
+    if not prefix:
+        return []
+    prefix = prefix.upper()
+    matches = [w for w in DICTIONARY if w.startswith(prefix)]
+    return matches[:n]
+
 cap               = None
 cap_lock          = threading.Lock()
 
@@ -112,7 +133,7 @@ def process_frame(frame):
 
         if len(prediction_buffer) == 10:
             most_common = max(set(prediction_buffer),
-                              key=list(prediction_buffer).count)
+                            key=list(prediction_buffer).count)
             count       = list(prediction_buffer).count(most_common)
             state['confidence'] = round((count / 10) * 100)
 
@@ -199,6 +220,23 @@ def switch_camera():
                 cap.release()
                 cap = None
     prediction_buffer.clear()
+    return jsonify({'success': True})
+
+@app.route('/suggestions')
+def suggestions():
+    prefix = request.args.get('prefix', '')
+    results = get_suggestions(prefix)
+    return jsonify({'suggestions': results})
+
+
+@app.route('/use_suggestion', methods=['POST'])
+def use_suggestion():
+    word = request.get_json().get('word', '')
+    if word:
+        state['sentence']    += word + ' '
+        speak(word)
+        state['current_word'] = ''
+        prediction_buffer.clear()
     return jsonify({'success': True})
 
 
