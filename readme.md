@@ -37,4 +37,4 @@ Open `http://localhost:5000`
 Download from [Kaggle](https://www.kaggle.com/datasets/grassknoted/asl-alphabet) → place in `data/raw/`
 
 ## Author
-Your Name — [GitHub](https://github.com/yourusername)
+Arnav Verma — [GitHub](https://github.com/arnav-verma200)
