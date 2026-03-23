@@ -207,7 +207,7 @@ def main():
 
             if len(prediction_buffer) == 10:
                 most_common = max(set(prediction_buffer),
-                                  key=list(prediction_buffer).count)
+                                key=list(prediction_buffer).count)
                 count       = list(prediction_buffer).count(most_common)
                 confidence  = round((count / 10) * 100)
 

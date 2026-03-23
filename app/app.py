@@ -136,7 +136,7 @@ def process_frame(frame):
 
         if len(prediction_buffer) == 10:
             most_common = max(set(prediction_buffer),
-                              key=list(prediction_buffer).count)
+                            key=list(prediction_buffer).count)
             count       = list(prediction_buffer).count(most_common)
             state['confidence'] = round((count / 10) * 100)
 
@@ -165,8 +165,8 @@ def generate_frames():
         if not ret:
             continue
         yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' +
-               buffer.tobytes() + b'\r\n')
+            b'Content-Type: image/jpeg\r\n\r\n' +
+            buffer.tobytes() + b'\r\n')
 
 
 @app.route('/')
