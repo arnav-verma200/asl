@@ -30,6 +30,7 @@ state = {
     'confidence':       0,
     'hand_detected':    False,
     'camera_mode':      'laptop',
+    'motion_mode':      '',
 }
 
 prediction_buffer = deque(maxlen=10)
@@ -41,8 +42,13 @@ cap               = None
 cap_lock          = threading.Lock()
 speak_lock        = threading.Lock()
 
+pinky_hold_start  = None
+motion_trajectory = []
+motion_mode       = None
+HOLD_TIME         = 2.0
+MAX_TRAJECTORY    = 60
 
-# Load dictionary
+
 def load_dictionary(path='data/words.txt'):
     with open(path, 'r') as f:
         words = [w.strip().upper() for w in f.readlines()]
@@ -97,6 +103,138 @@ def normalize_landmarks(hand_landmarks):
     return np.array(normalized).reshape(1, -1)
 
 
+def is_finger_up(landmarks, tip_id, base_id):
+    return landmarks[tip_id].y < landmarks[base_id].y
+
+
+def is_pinky_only_up(hand_landmarks):
+    lm = hand_landmarks.landmark
+    return (
+        is_finger_up(lm, 20, 17)     and
+        not is_finger_up(lm, 16, 13) and
+        not is_finger_up(lm, 12, 9)  and
+        not is_finger_up(lm, 8,  5)
+    )
+
+
+def is_pointer_only_up(hand_landmarks):
+    lm = hand_landmarks.landmark
+    return (
+        is_finger_up(lm, 8,  5)      and
+        not is_finger_up(lm, 12, 9)  and
+        not is_finger_up(lm, 16, 13) and
+        not is_finger_up(lm, 20, 17)
+    )
+
+
+def is_hand_still(trajectory, threshold=0.04):
+    if len(trajectory) < 10:
+        return True
+    xs = [p[0] for p in trajectory]
+    ys = [p[1] for p in trajectory]
+    return (max(xs) - min(xs)) < threshold and \
+        (max(ys) - min(ys)) < threshold
+
+
+def is_J_shape(trajectory, min_distance=0.1):
+    if len(trajectory) < 20:
+        return False
+    xs  = [p[0] for p in trajectory]
+    ys  = [p[1] for p in trajectory]
+    dy  = ys[-1] - ys[0]
+    dx  = xs[-1] - xs[0]
+    mid = len(xs) // 2
+    second_half_dx = xs[-1] - xs[mid]
+    moved_down  = dy > min_distance
+    curved_left = dx < 0 or second_half_dx < -0.02
+    significant = (abs(dy) + abs(dx)) > min_distance
+    return moved_down and curved_left and significant
+
+
+def is_Z_shape(trajectory, min_distance=0.08):
+    if len(trajectory) < 20:
+        return False
+    n   = len(trajectory)
+    s1  = trajectory[:n//3]
+    s2  = trajectory[n//3:2*n//3]
+    s3  = trajectory[2*n//3:]
+    dx1 = s1[-1][0] - s1[0][0]
+    dx2 = s2[-1][0] - s2[0][0]
+    dx3 = s3[-1][0] - s3[0][0]
+    all_xs      = [p[0] for p in trajectory]
+    significant = (max(all_xs) - min(all_xs)) > min_distance
+    return (dx1 > 0.02 and dx2 < -0.02 and
+            dx3 > 0.02 and significant)
+
+
+def check_J_Z(hand_landmarks, current_time):
+    global pinky_hold_start, motion_trajectory, motion_mode
+
+    lm        = hand_landmarks.landmark
+    pinky_tip = (lm[20].x, lm[20].y)
+    index_tip = (lm[8].x,  lm[8].y)
+
+    if is_pinky_only_up(hand_landmarks):
+        state['motion_mode'] = 'J mode'
+
+        if motion_mode == 'J':
+            motion_trajectory.append(pinky_tip)
+            if len(motion_trajectory) > MAX_TRAJECTORY:
+                motion_trajectory.pop(0)
+            if is_J_shape(motion_trajectory):
+                motion_trajectory = []
+                motion_mode       = None
+                pinky_hold_start  = None
+                state['motion_mode'] = ''
+                return 'J'
+
+        elif not is_hand_still(motion_trajectory):
+            motion_mode = 'J'
+            motion_trajectory.append(pinky_tip)
+
+        else:
+            if pinky_hold_start is None:
+                pinky_hold_start  = current_time
+                motion_trajectory = [pinky_tip]
+            else:
+                motion_trajectory.append(pinky_tip)
+                if current_time - pinky_hold_start >= HOLD_TIME:
+                    pinky_hold_start     = None
+                    motion_trajectory    = []
+                    motion_mode          = None
+                    state['motion_mode'] = ''
+                    return 'I'
+
+    elif is_pointer_only_up(hand_landmarks):
+        state['motion_mode'] = 'Z mode'
+
+        if motion_mode == 'Z':
+            motion_trajectory.append(index_tip)
+            if len(motion_trajectory) > MAX_TRAJECTORY:
+                motion_trajectory.pop(0)
+            if is_Z_shape(motion_trajectory):
+                motion_trajectory    = []
+                motion_mode          = None
+                state['motion_mode'] = ''
+                return 'Z'
+
+        elif not is_hand_still(motion_trajectory):
+            motion_mode = 'Z'
+            motion_trajectory.append(index_tip)
+
+        else:
+            motion_trajectory    = [index_tip]
+            motion_mode          = None
+
+    else:
+        pinky_hold_start     = None
+        motion_trajectory    = []
+        motion_mode          = None
+        state['motion_mode'] = ''
+
+    return None
+
+
 def get_phone_frame():
     try:
         img_resp = urllib.request.urlopen(PHONE_URL, timeout=2)
@@ -117,6 +255,7 @@ def get_laptop_frame():
 
 def process_frame(frame):
     global last_letter_time
+
     frame     = cv2.flip(frame, 1)
     image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     results   = hands.process(image_rgb)
@@ -130,26 +269,40 @@ def process_frame(frame):
                 mp_drawing.DrawingSpec(color=(0, 255, 0),   thickness=2, circle_radius=4),
                 mp_drawing.DrawingSpec(color=(255, 255, 0), thickness=2)
             )
-        landmarks  = normalize_landmarks(results.multi_hand_landmarks[0])
-        prediction = model.predict(landmarks)[0]
-        prediction_buffer.append(prediction)
 
-        if len(prediction_buffer) == 10:
-            most_common = max(set(prediction_buffer),
-                            key=list(prediction_buffer).count)
-            count       = list(prediction_buffer).count(most_common)
-            state['confidence'] = round((count / 10) * 100)
+        hand_lm      = results.multi_hand_landmarks[0]
+        current_time = time.time()
 
-            if count >= CONFIDENCE_FRAMES:
-                state['predicted_letter'] = most_common
-                current_time = time.time()
-                if current_time - last_letter_time > LETTER_DELAY:
-                    state['current_word'] += most_common
-                    last_letter_time       = current_time
+        special = check_J_Z(hand_lm, current_time)
+
+        if special:
+            state['predicted_letter'] = special
+            state['confidence']       = 100
+            prediction_buffer.clear()
+            if current_time - last_letter_time > LETTER_DELAY:
+                state['current_word'] += special
+                last_letter_time       = current_time
+        else:
+            landmarks  = normalize_landmarks(hand_lm)
+            prediction = model.predict(landmarks)[0]
+            prediction_buffer.append(prediction)
+
+            if len(prediction_buffer) == 10:
+                most_common = max(set(prediction_buffer),
+                                key=list(prediction_buffer).count)
+                count       = list(prediction_buffer).count(most_common)
+                state['confidence'] = round((count / 10) * 100)
+
+                if count >= CONFIDENCE_FRAMES:
+                    state['predicted_letter'] = most_common
+                    if current_time - last_letter_time > LETTER_DELAY:
+                        state['current_word'] += most_common
+                        last_letter_time       = current_time
     else:
         prediction_buffer.clear()
         state['predicted_letter'] = ''
         state['confidence']       = 0
+        state['motion_mode']      = ''
 
     return frame
 
