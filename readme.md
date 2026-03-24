@@ -1,8 +1,8 @@
-# 🤟 ASL Sign Language Translator
+# ASL Sign Language Translator
 
-Real-time ASL hand gesture to text and speech using Computer Vision + ML.
+Real-time ASL hand gesture → text + speech using CV + ML.
 
-## Results
+## Accuracy
 | Model | Accuracy |
 |---|---|
 | SVM | 99.15% |
@@ -15,26 +15,25 @@ Real-time ASL hand gesture to text and speech using Computer Vision + ML.
 
 ## Setup
 ```bash
-git clone https://github.com/yourusername/sign-language-translator
-cd sign-language-translator
+git clone https://github.com/yourusername/asl-translator
+cd asl-translator
 pip install -r requirements.txt
 ```
 
-## Run Pipeline
+## Dataset
+[ASL Alphabet — Kaggle](https://www.kaggle.com/datasets/grassknoted/asl-alphabet) → place in `data/raw/`
+
+## Run
 ```bash
 python src/feature_extraction.py
 python src/data_preprocessing.py
 python src/train.py
-```
-
-## Run Web App
-```bash
 python app/app.py
 ```
 Open `http://localhost:5000`
 
-## Dataset
-Download from [Kaggle](https://www.kaggle.com/datasets/grassknoted/asl-alphabet) → place in `data/raw/`
-
-## Author
-Arnav Verma — [GitHub](https://github.com/arnav-verma200)
+## Features
+- 26 letters (A-Z) including motion gestures J and Z
+- Word autocomplete
+- Text to speech
+- Laptop + phone camera support
