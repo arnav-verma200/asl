@@ -50,10 +50,14 @@ MAX_TRAJECTORY    = 60
 
 
 def load_dictionary(path='data/words.txt'):
-    with open(path, 'r') as f:
-        words = [w.strip().upper() for w in f.readlines()]
-    words = [w for w in words if 2 <= len(w) <= 10]
-    return sorted(words)
+    try:
+        with open(path, 'r') as f:
+            words = [w.strip().upper() for w in f.readlines()]
+        words = [w for w in words if 2 <= len(w) <= 10]
+        return sorted(words)
+    except FileNotFoundError:
+        print(f"Warning: Dictionary file '{path}' not found. Using fallback dictionary.")
+        return ["HELLO", "WORLD", "SIGN", "LANGUAGE", "THANK", "YOU", "PLEASE", "SORRY", "YES", "NO", "HELP", "AGENT"]
 
 DICTIONARY = load_dictionary()
 print(f"Dictionary loaded: {len(DICTIONARY)} words")

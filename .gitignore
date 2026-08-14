@@ -43,7 +43,6 @@ logs/
 # Demo video
 demo/*.mp4
 demo/*.avi
-data/words.txt
 design.md
 models/knn_model.pkl
 models/random_forest_model.pkl
