@@ -20,8 +20,6 @@ data/raw/
 # Numpy splits — can be regenerated
 data/processed/
 
-# Trained Models — too large for GitHub
-models/
 
 # Landmarks CSV — can be regenerated
 data/landmarks/landmarks.csv
@@ -47,3 +45,7 @@ demo/*.mp4
 demo/*.avi
 data/words.txt
 design.md
+models/knn_model.pkl
+models/random_forest_model.pkl
+models/mlp_neural_network_model.pkl
+models/svm_model.pkl
