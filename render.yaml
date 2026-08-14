@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: asl-learning-agent
+    env: docker
+    plan: free
+    region: oregon
