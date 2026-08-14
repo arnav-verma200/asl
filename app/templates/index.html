@@ -1,55 +1,113 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>ASL Translator</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤟 ASL Learning Agent & Translator</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 
-    <h1>🤟 ASL Translator</h1>
-
-    <div id="app">
-
-        <div id="feed-box">
-            <img src="/video_feed">
-            <p id="hand-status">No Hand</p>
+    <header class="app-header">
+        <div class="logo">
+            <span class="logo-icon">🤟</span>
+            <div class="logo-text">
+                <h1>ASL Learning Agent</h1>
+                <span class="logo-sub">Interactive Prototype</span>
+            </div>
         </div>
+        <div class="status-bar">
+            <span id="hand-status" class="status-badge">No Hand Detected</span>
+        </div>
+    </header>
 
-        <div id="output-box">
+    <main id="app" class="grid-container">
 
-            <div id="letter-display">—</div>
-            <p id="conf">Confidence: 0%</p>
+        <!-- Panel 1: Webcam Feed -->
+        <section class="card panel-feed">
+            <div class="panel-header">
+                <h2>Live Camera Feed</h2>
+            </div>
+            <div class="video-wrapper">
+                <img src="/video_feed" alt="ASL Camera Stream">
+            </div>
+            <div class="cam-controls">
+                <button id="btn-laptop" class="btn btn-secondary active" onclick="switchCamera('laptop')">
+                    💻 Laptop Camera
+                </button>
+                <button id="btn-phone" class="btn btn-secondary" onclick="switchCamera('phone')">
+                    📱 Phone Camera
+                </button>
+            </div>
+        </section>
 
-            <hr>
-
-            <p class="label">Word</p>
-            <p id="word">_</p>
-
-            <p class="label">Suggestions</p>
-            <div id="suggestions"></div>
-
-            <p class="label">Sentence</p>
-            <p id="sentence">...</p>
-
-            <hr>
-
-            <div id="btns">
-                <button onclick="addWord()">Add Word</button>
-                <button onclick="deleteLetter()">Delete</button>
-                <button onclick="speakSentence()">Speak</button>
-                <button onclick="clearAll()">Clear</button>
+        <!-- Panel 2: Live Translation & Composer -->
+        <section class="card panel-output">
+            <div class="panel-header">
+                <h2>Real-Time Translation</h2>
+            </div>
+            
+            <div class="translation-display">
+                <div class="letter-box">
+                    <span class="label">Predicted Letter</span>
+                    <div id="letter-display">—</div>
+                </div>
+                
+                <div class="confidence-box">
+                    <div class="confidence-header">
+                        <span class="label">Confidence</span>
+                        <span id="conf-text" class="metric">0%</span>
+                    </div>
+                    <div class="confidence-bar-outer">
+                        <div id="confidence-bar"></div>
+                    </div>
+                </div>
             </div>
 
-            <div id="cam-btns">
-                <button id="btn-laptop" class="active"
-                        onclick="switchCamera('laptop')">Laptop Cam</button>
-                <button id="btn-phone"
-                        onclick="switchCamera('phone')">Phone Cam</button>
+            <div class="composition-box">
+                <div class="field">
+                    <span class="label">Current Word</span>
+                    <div id="word" class="field-value">_</div>
+                </div>
+
+                <div class="field">
+                    <span class="label">Suggestions</span>
+                    <div id="suggestions" class="pill-group"></div>
+                </div>
+
+                <div class="field">
+                    <span class="label">Sentence Builder</span>
+                    <div id="sentence" class="field-value">...</div>
+                </div>
             </div>
 
-        </div>
+            <div class="control-actions">
+                <button class="btn btn-primary" onclick="addWord()">
+                    Add Word <kbd class="shortcut">Space</kbd>
+                </button>
+                <button class="btn btn-danger" onclick="deleteLetter()">
+                    Delete <kbd class="shortcut">⌫</kbd>
+                </button>
+                <button class="btn btn-secondary" onclick="speakSentence()">
+                    Speak <kbd class="shortcut">Enter</kbd>
+                </button>
+                <button class="btn btn-clear" onclick="clearAll()">
+                    Clear <kbd class="shortcut">C</kbd>
+                </button>
+            </div>
+        </section>
 
-    </div>
+        <!-- Panel 3: ASL Alphabet Reference -->
+        <section class="card panel-reference">
+            <div class="panel-header">
+                <h2>ASL Alphabet Reference</h2>
+            </div>
+            <div class="reference-wrapper">
+                <img src="{{ url_for('static', filename='ASL_Alphabet.jpg') }}" alt="ASL Alphabet Reference Chart">
+            </div>
+        </section>
+
+    </main>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
